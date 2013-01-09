@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    
+    <!-- Bootstrap stuff -->
+    <style type="text/css">
+    	.clearfix {
+			  *zoom: 1;
+			}
+			.clearfix:before,
+			.clearfix:after {
+			  display: table;
+			  content: "";
+			  line-height: 0;
+			}
+			.clearfix:after {
+			  clear: both;
+			}
+			.hide-text {
+			  font: 0/0 a;
+			  color: transparent;
+			  text-shadow: none;
+			  background-color: transparent;
+			  border: 0;
+			}
+			.input-block-level {
+			  display: block;
+			  width: 100%;
+			  min-height: 30px;
+			  -webkit-box-sizing: border-box;
+			  -moz-box-sizing: border-box;
+			  box-sizing: border-box;
+			}
+			article,
+			aside,
+			details,
+			figcaption,
+			figure,
+			footer,
+			header,
+			hgroup,
+			nav,
+			section {
+			  display: block;
+			}
+			audio,
+			canvas,
+			video {
+			  display: inline-block;
+			  *display: inline;
+			  *zoom: 1;
+			}
+			audio:not([controls]) {
+			  display: none;
+			}
+			html {
+			  font-size: 100%;
+			  -webkit-text-size-adjust: 100%;
+			  -ms-text-size-adjust: 100%;
+			}
+			img {
+			/* Responsive images (ensure images don't scale beyond their parents) */
+			  max-width: 100%;
+			/* Part 1: Set a maxium relative to the parent */
+			  width: auto 9;
+			/* IE7-8 need help adjusting responsive images */
+			  height: auto;
+			/* Part 2: Scale the height according to the width, otherwise you get stretching */
+			  vertical-align: middle;
+			  border: 0;
+			  -ms-interpolation-mode: bicubic;
+			}
+			#map_canvas img,
+			.google-maps img {
+			  max-width: none;
+			}
+		</style>
+
+		<style>
+			body {
+			  margin: 0;
+			  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+			  font-size: 14px;
+			  line-height: 20px;
+			  color: #fff;
+			  background-color: #333;
+			  text-align: center;
+			}
+
+			#current_time {
+				font-size: 200px;
+				font-weight: 100;
+			}
+			#current_day {
+				font-size: 40px;
+				font-weight: 200;
+			}
+			#weather_container { margin-top: 150px; display:none; }
+			#weather_container .wday { width: 20%; display: inline-block; }
+
+			#weather_container .wday .icon { font-size: 150px; }
+			#weather_container .wday .temp { font-size: 50px; height: 50px; margin-top: 30px; font-weight: 500;}
+			#weather_container .wday .temp .low { color: #888; }
+			#weather_container .wday .day  { font-size: 40px; height: 50px; margin-top: 20px; font-weight: 100;}
+
+		</style>
+    <link rel="stylesheet" href="css/weather.css">
+  </head>
+  <body>
+  	<div id="clock">
+	    <h1 id="current_time">Time</h1>
+	    <h2 id="current_day">Tuesday, January 8</h2>
+	  </div>
+	  <div id="weather_container">
+	  	<div class="wday today" id="day_1" >
+	  		<div class="icon"><i class="icon-sun"></i></div>
+	  		<div class="temp"><span class="high">70º</span> <span class="low">50º</span></div>
+	  		<div class="day">Today</div>
+	  	</div>
+	  	<div class="wday" id="day_2" >
+	  		<div class="icon"><i class="icon-sun"></i></div>
+	  		<div class="temp"><span class="high">70º</span> <span class="low">52º</span></div>
+	  		<div class="day">Wednesday</div>
+	  	</div>
+	  	<div class="wday" id="day_3" >
+	  		<div class="icon"><i class="icon-cloud"></i></div>
+	  		<div class="temp"><span class="high">70º</span> <span class="low">52º</span></div>
+	  		<div class="day">Thursday</div>
+	  	</div>
+	  	<div class="wday" id="day_4" >
+	  		<div class="icon"><i class="icon-rain"></i></div>
+	  		<div class="temp"><span class="high">70º</span> <span class="low">52º</span></div>
+	  		<div class="day">Friday</div>
+	  	</div>
+	  </div>
+
+
+	  <script src="http://code.jquery.com/jquery-latest.js"></script>
+	  <script src="https://raw.github.com/timrwood/moment/1.7.2/min/moment.min.js"></script>
+    <script>
+    	jQuery(document).ready(function($) {
+
+    		var icon_string_map = { 'chanceflurries':'icon-snow-alt',
+																'chancerain':'icon-drizzle',
+																'chancesleet':'icon-hail',
+																'chancesnow':'icon-snow-alt',
+																'chancetstorms':'icon-cloud-flash',
+																'clear':'icon-sun',
+																'cloudy':'icon-cloud',
+																'flurries':'icon-snow-heavy',
+																'fog':'icon-fog-cloud',
+																'hazy':'icon-fog-mist',
+																'mostlycloudy':'icon-cloud',
+																'mostlysunny':'icon-sun',
+																'partlycloudy':'icon-sun',
+																'partlysunny':'icon-cloud-sun',
+																'sleet':'icon-hail',
+																'rain':'icon-rain',
+																'snow':'icon-snow',
+																'sunny':'icon-sun',
+																'tstorms':'icon-clouds-flash',
+																'partlycloudy':'icon-cloud-sun' }
+
+				var today = (new Date()).getDay();
+
+				// Update Clock every second
+				function updateClock() {
+					$("#current_time").html(moment().format("h:mm:ss"));
+					$("#current_day").html(moment().format("MMMM Do, YYYY"));
+					if (today != (new Date()).getDay()) {
+						updateWeather();
+						today = (new Date()).getDay();
+					}
+				}
+	      setInterval(function(){updateClock()},1000);
+				updateClock();
+
+				// Update Weather
+				var weatherForcast;
+				function updateWeather() {
+				  $.ajax({
+					  url : url_query('weatherapi'),
+					  dataType : "jsonp",
+					  success : function(parsed_json) {
+					  	weatherForcast = parsed_json;
+					  	updateWeatherView();
+					  	$('#weather_container').show();
+					  },
+					  error : function() {
+					  	// Schedule another update in a minute (90 seconds) if load failed
+					  	setTimeout(function(){updateWeather()}, 90000);
+					  }
+				  });
+				}
+				function updateWeatherView() {
+					1+1;
+					var forcast_days = weatherForcast.forecast.simpleforecast.forecastday;
+					$.each(forcast_days, function(i,day) {
+						var day_view = $("#weather_container #day_"+day.period);
+						day_view.find('.icon').html(weatherIcon(day.icon));
+						day_view.find('.temp .high').html(day.high.fahrenheit+"º");
+						day_view.find('.temp .low').html(day.low.fahrenheit+"º");
+						if (day.period == 1)
+							day_view.find('.day').html("Today");
+						else if (day.period == 2)
+							day_view.find('.day').html("Tomorrow");
+						else
+							day_view.find('.day').html(day.date.weekday);
+					});
+				}
+				updateWeather();
+
+				// return the correct icon object based on the string given by the API
+				function weatherIcon(icon_string) {
+					icon = $("<i></i>");
+					icon.addClass(icon_string_map[icon_string]);
+					return icon;
+				}
+
+				// Parse URL Queries
+				function url_query( query ) {
+					query = query.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+					var expr = "[\\?&]"+query+"=([^&#]*)";
+					var regex = new RegExp( expr );
+					var results = regex.exec( window.location.href );
+					if ( results !== null ) {
+						return results[1];
+					} else {
+						return false;
+					}
+				}
+
+			});
+    </script>
+  </body>
+</html>
