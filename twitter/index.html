@@ -1,23 +1,154 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <script>var EmbedTweet={enableDebugging:false,automaticEmbedding:true,doIncludeStylesheet:true,objRegex:/http(s)?:\/\/twitter\.com\/(#!\/)?([a-z0-9_]+)\/status(es)?\/([0-9]+)/i,doEmbedClass:"EmbedTweet",dontEmbedClass:"dontEmbedTweet",$:function(a){var b=new Array;for(var c=0;c<arguments.length;c++){var a=arguments[c];if(typeof a=="string")a=document.getElementById(a);if(arguments.length==1)return a;b.push(a)}return b},addLoadEvent:function(a){var b=window.onload;if(typeof window.onload!="function"){window.onload=a}else{window.onload=function(){if(b){b()}a()}}},insertAfter:function(a,b){var c=b.parentNode;if(c.lastchild==b){c.appendChild(a)}else{};},hide:function(a){a=EmbedTweet.$(a);a.style.display="none";return a},getAnchorsByClassName:function(a,b){if(!b)b=document.getElementsByTagName("body")[0];var c=[];var d=new RegExp("\\b"+a+"\\b");var e=b.getElementsByTagName("a");for(var f=0,g=e.length;f<g;f++)if(d.test(e[f].className))c.push(e[f]);return c},getAnchorsWithoutClassName:function(a,b){if(!b)b=document.getElementsByTagName("body")[0];var c=[];var d=new RegExp("\\b"+a+"\\b");var e=b.getElementsByTagName("a");for(var f=0,g=e.length;f<g;f++)if(!d.test(e[f].className))c.push(e[f]);return c},debug:function(a){if(this.enableDebugging)console.log(a)},handleTweet:function(a){if(this.objRegex.test(a.href)){temp=a.href.split(/(\/)/);id=temp[temp.length-1];this.includeScript("http://embedtweet.com/embed/"+id);a.id="embedtweet_link_"+id;EmbedTweet.hide(a)}},includeScript:function(a){var b=document.getElementsByTagName("head")[0];var c=document.createElement("script");c.type="text/javascript";c.src=a;b.appendChild(c)},includeStylesheet:function(a,b){var c=document.getElementsByTagName("head")[0];var d=document.createElement("link");d.type="text/css";d.href=a;d.media=b;d.rel="stylesheet";c.appendChild(d)},contentLoaded:function(a,b){tweet_div=document.createElement("div");tweet_div.innerHTML=b;EmbedTweet.$("embedtweet_link_"+a).parentNode.insertBefore(tweet_div,EmbedTweet.$("embedtweet_link_"+a))},init:function(){EmbedTweet.debug("EmbedTweet javascript library loaded.");if(this.doIncludeStylesheet){EmbedTweet.includeStylesheet("http://embedtweet.com/stylesheets/embed_v2.css","screen")}EmbedTweet.addLoadEvent(function(){EmbedTweet.start()})},start:function(){EmbedTweet.debug("Initializing EmbedTweet");var a=new Array;if(this.automaticEmbedding){a=EmbedTweet.getAnchorsWithoutClassName(this.dontEmbedClass)}else{a=EmbedTweet.getAnchorsByClassName(this.doEmbedClass)}for(var b=0;b<a.length;b++){if(a[b].className!="twtr-timestamp"&&a[b].className!="dsq-service-name"&&(!a[b].parentNode||a[b].parentNode.className.indexOf("dsq-reaction-retweets")==-1))EmbedTweet.handleTweet(a[b])}}};EmbedTweet.init()</script>
-  <style>
-    .tweet.small_tweet { margin: auto; margin-top: 40px; }
-    div.tweet {
-      font: 15px "Lucida Grande", Arial, sans-serif;
-      text-align: left;
-      max-width: 1500px;
-    }
-    div.tweet.small_tweet div.message div.content { font-size: 3em; }
-    /*div.tweet div.message_wrap div.message div.meta {
-      font: 2.5em Georgia, serif;
-      font-style: italic;
-    }*/
-  </style>
-</head>
-<body>
-  <a href="https://twitter.com/#!/andrewe/status/108586949882822656">This Tweet</a>
-  <a href="https://twitter.com/biolau/status/288706879457222658">This Tweet</a>
-</body>
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../shared_assets/css/font-awesome.min.css">
+    <style>
+      body { 
+        margin: 0; 
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; 
+        text-align: center;
+        background-repeat: no-repeat
+      }
+      body.repeat {
+        background-repeat: repeat repeat;
+      }
+
+      /* Tweet */
+
+      div.tweets { margin: 0 20px; }
+      div.tweet { min-width: 200px; max-width: 900px; padding: 20px; background-color: #fff; -webkit-border-radius: 5px; -moz-border-radius: 5px; border: 1px #ccc solid; position: relative; text-align: left; margin: 20px auto; }
+
+      div.tweet img { float: left; padding: 0 10px 5px 0; }
+
+      div.tweet div.message_wrap { position: relative; margin-left: 90px; }
+
+      div.tweet div.message_wrap div.profile_name { font-weight: bold; color: #333; font-size: 1.2em; }
+      div.tweet div.message_wrap div.profile_name span.handle { font-size: 0.9em; color: #999; font-weight: normal; padding-left: 8px; }
+
+      div.tweet div.message_wrap div.message { font-weight: 400; line-height: 1.25em; font-size: 1.9em;}
+      div.tweet div.message_wrap div.message a:link,
+      div.tweet div.message_wrap div.message a:visited { text-decoration: none; }
+      div.tweet div.message_wrap div.message a:hover { text-decoration: underline; }
+
+      div.tweet div.message_wrap .retweet_status { color: #999; }
+
+    </style>
+  </head>
+  <body>
+    <div id="tweets">
+
+    </div>
+
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script>
+      // jQuery(document).ready(function($) {
+
+        // Update Tweets
+        var tweets;
+        var api_screen_name = url_query('screen_name');
+        var api_count = url_query('count');
+        var api_url = "http://api.twitter.com/1/statuses/user_timeline.json?include_rts=1&"
+        if (url_query('biola')) api_url = "https://ws.biola.edu/twitter/UserTimeline?jsonp&"
+            // used internally by Biola for caching purposes
+        if (api_screen_name) api_url += "screen_name="+api_screen_name+"&"
+        if (api_count) api_url += "count="+api_count+"&"
+        function updateTweets() {
+          if (api_url) {
+            $.ajax({
+              url : api_url,
+              dataType : "jsonp",
+              success : function(parsed_json) {
+                tweets = parsed_json;
+                setupBackground();
+                buildTweets();
+                changeLinkColor();
+              },
+              error : function(bla) {
+                // Schedule another update in a minute (90 seconds) if load failed
+                setTimeout(function(){updateTweets()}, 90000);
+              }
+            });
+          }
+        }
+
+        function buildTweets() {
+          if (tweets.length > 0) {
+            var tweet_container = $('#tweets');
+            $.each(tweets, function(i,tweet) {
+              // Check retweet status
+              var retweet = null;
+              if (tweet.retweeted_status) {
+                retweet = tweet.retweeted_status;
+              }
+              var user = (retweet || tweet).user
+              
+              var new_tweet = $("<div class='tweet'></div>");
+              new_tweet.append(
+                $("<img/>").attr('src', user.profile_image_url.replace("normal.", "bigger."))
+              );
+              new_tweet.append(buildTweet(retweet || tweet));
+              tweet_container.append(new_tweet);
+              if (retweet) {
+                var retweet_status = $("<div class='retweet_status'></div>");
+                retweet_status.append($("<i class='icon-retweet'></i> "));
+                retweet_status.append(" Retweeted by "+tweet.user.name);
+                new_tweet.find('.message_wrap').append(retweet_status);
+              }
+            });
+          }
+        }
+        function buildTweet(tweet) {
+          var message_wrap = $("<div class='message_wrap'></div>");
+
+          // Build user name and handle
+          profile_name = $("<div class='profile_name'></div>");
+          profile_name.html(tweet.user.name + " <span class='handle'>@" + tweet.user.screen_name + "</span>");
+          message_wrap.append(profile_name);
+
+          // Build message
+          message = $("<div class='message'></div>").html(parseTweetText(tweet.text));
+          return message_wrap.append(message);
+        }
+
+        function setupBackground() {
+          bg_color = "#" + tweets[0].user.profile_background_color;
+          bg_image = tweets[0].user.profile_background_image_url;
+          bg_repeat = tweets[0].user.profile_background_tile;
+
+          var body_tag = document.getElementsByTagName('body')[0];
+
+          body_tag.style.backgroundImage = "url("+bg_image+")";
+          body_tag.style.backgroundColor = bg_color;
+
+          if (bg_repeat) body_tag.style.backgroundRepeat = "repeat repeat";
+        }
+
+        function changeLinkColor() {
+          $('a').css('color', "#"+tweets[0].user.profile_link_color);
+        }
+
+        // Parse URL Queries
+        function url_query( query ) {
+          query = query.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+          var expr = "[\\?&]"+query+"=([^&#]*)";
+          var regex = new RegExp( expr );
+          var results = regex.exec( window.location.href );
+          if ( results !== null ) {
+            return results[1];
+          } else {
+            return false;
+          }
+        }
+
+        function parseTweetText(text) {
+          // /(^|[^"'])(https?:\/\/)[A-Za-z0-9\-\._~:\/&?#=%]*/
+          return text.replace(/(https?:\/\/[A-Za-z0-9\-\._~:\/&?#=%]*)/g, "<a href='$1'>$1</a>");
+        }
+
+        updateTweets();
+
+      // });
+    </script>
+  </body>
 </html>
